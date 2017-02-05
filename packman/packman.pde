@@ -17,8 +17,13 @@ void setup() {
 void draw() {
   background(255);
   fill(33, 255, 0);
+
   arc(pacmanX, pacmanY, pacmanWidth, pacmanHeigth, radians(startAngle), radians(endAngle));
 
+  ellipse(450, 250, 50, 50);
+  ellipse(550, 250, 50, 50);
+  ellipse(650, 250, 50, 50); 
+  
   startAngle += step * direction;
   endAngle -= step * direction;
 

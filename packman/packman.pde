@@ -3,8 +3,6 @@ float endAngle = 330;
 int minStartAngle = 0;
 int maxStartAngle = 30;
 
-
-
 float pacmanX = 250;
 float pacmanY = 250;
 float pacmanWidth = 150;
@@ -41,7 +39,6 @@ void draw() {
   startAngle += step * direction;
   endAngle -= step * direction;
   
-
   if (startAngle <= minStartAngle || startAngle >= maxStartAngle) {
     direction *= -1;
   }

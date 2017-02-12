@@ -1,5 +1,9 @@
 float startAngle = 30;
 float endAngle = 330;
+int minStartAngle = 0;
+int maxStartAngle = 30;
+
+
 
 float pacmanX = 250;
 float pacmanY = 250;
@@ -30,15 +34,15 @@ void draw() {
   if (moveRight == true) pacmanX += 5;
 
   arc(pacmanX, pacmanY, pacmanWidth, pacmanHeigth, radians(startAngle), radians(endAngle));
-
   ellipse(450, 250, 50, 50);
   ellipse(550, 250, 50, 50);
   ellipse(650, 250, 50, 50); 
 
   startAngle += step * direction;
   endAngle -= step * direction;
+  
 
-  if (startAngle <= 0 || startAngle >= 30) {
+  if (startAngle <= minStartAngle || startAngle >= maxStartAngle) {
     direction *= -1;
   }
 }

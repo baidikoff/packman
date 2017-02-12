@@ -24,17 +24,19 @@ void setup() {
 
 void draw() {
   background(255);
-  fill(33, 255, 0);
 
   if (moveUp == true) pacmanY -= 5;
   if (moveDown == true) pacmanY += 5;
   if (moveLeft == true) pacmanX -= 5;
   if (moveRight == true) pacmanX += 5;
 
+  fill(250, 5, 9);
+  for (int i = 0; i < 5; i++) {
+    ellipse (350 + i * 100, 250, 50, 50);
+  }
+
+  fill(250, 201, 5);
   arc(pacmanX, pacmanY, pacmanWidth, pacmanHeigth, radians(startAngle), radians(endAngle));
-  ellipse(450, 250, 50, 50);
-  ellipse(550, 250, 50, 50);
-  ellipse(650, 250, 50, 50); 
 
   startAngle += step * direction;
   endAngle -= step * direction;

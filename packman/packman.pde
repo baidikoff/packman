@@ -16,10 +16,25 @@ boolean moveDown = false;
 boolean moveLeft = false;
 boolean moveRight = false;
 
+float circleBoardSize = 50.0;
+float circleSize = 30.0;
+float circleX[];
+float circleY[];
+
 void setup() {
   size(800, 600);
   smooth();
   strokeWeight(0);
+  
+  int count = (int)(width/ circleBoardSize);
+  circleX = new float[count];
+  circleY = new float[count];
+  
+  float margin = (width - count * circleBoardSize) / 2;
+  for (int i = 0; i < circleX.length; i++) {
+    circleX[i] = margin + i * circleBoardSize + circleBoardSize / 2.0;
+    circleY[i] = 100;
+  }
 }
 
 void draw() {
@@ -31,8 +46,8 @@ void draw() {
   if (moveRight == true) pacmanX += 5;
 
   fill(250, 5, 9);
-  for (int i = 0; i < 5; i++) {
-    ellipse (350 + i * 100, 250, 50, 50);
+  for(int i = 0; i < circleX.length; i++)  {
+    ellipse(circleX[i], circleY[i], circleSize, circleSize);
   }
 
   fill(250, 201, 5);

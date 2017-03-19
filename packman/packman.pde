@@ -1,5 +1,13 @@
+PFont gameOverFont;
+
 int points = 0;
 int lifes = 3;
+boolean gameOver = false;
+
+float restartButtonWidth;
+float restartButtonHeight;
+float restartButtonX;
+float restartButtonY;
 
 float startAngle = 30;
 float endAngle = 330;
@@ -47,6 +55,13 @@ void setup() {
   size(800, 600);
   smooth();
   strokeWeight(0);
+  
+  gameOverFont = createFont("28 Days Later.ttf", 40, true);
+  
+  restartButtonWidth = 200;
+  restartButtonHeight = 70;
+  restartButtonX = width / 2 - restartButtonWidth / 2;
+  restartButtonY = 3 * height / 4 - restartButtonHeight / 2;
 
   int count = (int)(width/ circleBoardSize);
   circleX = new float[count];
@@ -76,62 +91,125 @@ void setup() {
 }
 
 void draw() {
-  background(255);
-
-  if (moveUp == true) {
-    startAngle = startAngleUp - animationStep;
-    endAngle = endAngleUp + animationStep;
-    pacmanY -= 5;
+  if (gameOver == false) {
+    prepareGame();
+    drawGame();
+  } else {
+    drawGameOver();
+    checkRestart();
   }
-  if (moveDown == true) {
-    startAngle = startAngleDown - animationStep;
-    endAngle = endAngleDown + animationStep;
-    pacmanY += 5;
-  }
-  if (moveLeft == true) {
-    startAngle = startAngleLeft - animationStep;
-    endAngle = endAngleLeft + animationStep;
-    pacmanX -= 5;
-  }
-  if (moveRight == true) {
-    startAngle = startAngleRight - animationStep;
-    endAngle = endAngleRight + animationStep;
-    pacmanX += 5;
-  }
+}
 
-  if (pacmanX - pacmanWidth / 2 <= 0) pacmanX = pacmanWidth / 2;
-  if (pacmanY - pacmanHeigth / 2 <= 0) pacmanY = pacmanHeigth / 2;
-  if (pacmanX + pacmanWidth / 2 >= width) pacmanX = width - pacmanWidth / 2;
-  if (pacmanY + pacmanHeigth / 2 >= height - 50) pacmanY = height - 50 - pacmanHeigth / 2;
+void prepareGame() {
+  selectAngles();
+  bounceOnEdges();
 
-  fill(250, 5, 9);
-  for (int i = 0; i < circleX.length; i++) {
-    if (circles[i] == true) {
-      ellipse(circleX[i], circleY[i], circleSize, circleSize);
-    }
-  }
-
-  fill(39, 3, 255);
-  for (int i = 0; i < enemyCircles.length; i++) {
-    if (enemyCircles[i] == true) {
-      ellipse(enemyCircleX[i], enemyCircleY[i], circleSize, circleSize);
-    }
-  }
-
-  fill(250, 201, 5);
-  arc(pacmanX, pacmanY, pacmanWidth, pacmanHeigth, radians(startAngle), radians(endAngle));
-
-  drawPoints();  
-  drawLifes();
   calculateDistancesToEnemies();
   calculateDistancesToCircles();
   calculateEnemyAppearing();
   calculateAnimation();
 }
 
+void drawGameOver() {
+  drawGameOverMessage();
+  drawRestartButton();
+}
+
+void drawGameOverMessage() {
+  background(0);
+  fill(255, 0, 0);
+  textFont(gameOverFont, 40);
+  textAlign(CENTER, CENTER);
+  text("Game Over\n Points " + points, width / 2, height / 2);
+}
+
+void drawRestartButton() {  
+  fill(255, 0, 0);
+  textFont(gameOverFont, 40);
+  textAlign(CENTER, CENTER);
+  text("Restart", width / 2, 3 * height / 4);
+}
+
+void checkRestart() {
+  if (mousePressed == true) {
+    if (mouseX >= restartButtonX && mouseX <= restartButtonX + restartButtonWidth) {
+      if (mouseY >= restartButtonY && mouseY <= restartButtonY + restartButtonHeight) {
+        restart();        
+      }
+    }
+  }
+}
+
+void restart() {
+  lifes = 3;
+  points = 0;
+  gameOver = false;
+}
+
+void drawGame() {
+  background(255);
+  drawCircles();
+  drawEnemyCircles();
+  drawPacman();
+  drawPoints();  
+  drawLifes();
+}
+
+void selectAngles() {
+  if (moveUp == true) {
+    startAngle = startAngleUp - animationStep;
+    endAngle = endAngleUp + animationStep;
+    pacmanY -= 5;
+  } else if (moveDown == true) {
+    startAngle = startAngleDown - animationStep;
+    endAngle = endAngleDown + animationStep;
+    pacmanY += 5;
+  } else if (moveLeft == true) {
+    startAngle = startAngleLeft - animationStep;
+    endAngle = endAngleLeft + animationStep;
+    pacmanX -= 5;
+  } else if (moveRight == true) {
+    startAngle = startAngleRight - animationStep;
+    endAngle = endAngleRight + animationStep;
+    pacmanX += 5;
+  }
+}
+
+void bounceOnEdges() {
+  if (pacmanX - pacmanWidth / 2 <= 0) pacmanX = pacmanWidth / 2;
+  if (pacmanY - pacmanHeigth / 2 <= 20) pacmanY = pacmanHeigth / 2 + 20;
+  if (pacmanX + pacmanWidth / 2 >= width) pacmanX = width - pacmanWidth / 2;
+  if (pacmanY + pacmanHeigth / 2 >= height - 50) pacmanY = height - 50 - pacmanHeigth / 2;
+}
+
+void drawCircles() {
+  fill(250, 5, 9);
+  for (int i = 0; i < circleX.length; i++) {
+    if (circles[i] == true) {
+      ellipse(circleX[i], circleY[i], circleSize, circleSize);
+    }
+  }
+}
+
+void drawEnemyCircles() {
+  fill(39, 3, 255);
+  for (int i = 0; i < enemyCircles.length; i++) {
+    if (enemyCircles[i] == true) {
+      ellipse(enemyCircleX[i], enemyCircleY[i], circleSize, circleSize);
+    }
+  }
+}
+
+void drawPacman() {
+  fill(250, 201, 5);
+  arc(pacmanX, pacmanY, pacmanWidth, pacmanHeigth, radians(startAngle), radians(endAngle));
+}
+
 void drawPoints() {
   fill(0);
-  text("Points: " + points, 10, 15);
+  textFont(gameOverFont, 20);
+  textAlign(LEFT, LEFT);
+  text("Points " + points, 10, 20);
 }
 
 void drawLifes() {
@@ -178,6 +256,10 @@ void calculateDistancesToEnemies() {
       if (distance <= (pacmanWidth + circleSize) / 2) {
         lifes--;
         enemyCircles[i] = false;
+        
+        if (lifes == 0) {
+          gameOver = true;
+        }
       }
     }
   }
@@ -197,9 +279,6 @@ void calculateEnemyAppearing() {
       enemyCircles[i] = true;
     }
 
-    if (i < enemyCircles.length) {
-      enemyCircles[i] = true;
-    }
     enemyAppearTime = 400;
   }
 }

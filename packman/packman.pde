@@ -37,6 +37,11 @@ float circleY[];
 boolean circles[];
 
 int circlesTime[];
+float enemyCircleX[];
+float enemyCircleY[];
+boolean enemyCircles[];
+int enemyCirclesTime[];
+int enemyAppearTime = 400;
 
 void setup() {
   size(800, 600);
@@ -54,6 +59,19 @@ void setup() {
     circleX[i] = margin + i * circleBoardSize + circleBoardSize / 2.0;
     circleY[i] = random(20, height - 70);
     circles[i] = true;
+  }
+
+  int enemyCount = (int)(count / 5);
+  enemyCircleX = new float[enemyCount];
+  enemyCircleY = new float[enemyCount];
+  enemyCircles = new boolean[enemyCount];
+  enemyCirclesTime = new int[enemyCount];
+
+  for (int i = 0; i < enemyCircleX.length; i++) {
+    enemyCircleX[i] = random(20, width - 20);
+    enemyCircleY[i] = random(20, height - 20);
+    enemyCircles[i] = false;
+    enemyCirclesTime[i] = 0;
   }
 }
 
@@ -80,7 +98,7 @@ void draw() {
     endAngle = endAngleRight + animationStep;
     pacmanX += 5;
   }
-  
+
   if (pacmanX - pacmanWidth / 2 <= 0) pacmanX = pacmanWidth / 2;
   if (pacmanY - pacmanHeigth / 2 <= 0) pacmanY = pacmanHeigth / 2;
   if (pacmanX + pacmanWidth / 2 >= width) pacmanX = width - pacmanWidth / 2;
@@ -93,11 +111,30 @@ void draw() {
     }
   }
 
+  fill(39, 3, 255);
+  for (int i = 0; i < enemyCircles.length; i++) {
+    if (enemyCircles[i] == true) {
+      ellipse(enemyCircleX[i], enemyCircleY[i], circleSize, circleSize);
+    }
+  }
+
   fill(250, 201, 5);
   arc(pacmanX, pacmanY, pacmanWidth, pacmanHeigth, radians(startAngle), radians(endAngle));
+
+  drawPoints();  
+  drawLifes();
+  calculateDistancesToEnemies();
+  calculateDistancesToCircles();
+  calculateEnemyAppearing();
+  calculateAnimation();
+}
+
+void drawPoints() {
   fill(0);
   text("Points: " + points, 10, 15);
+}
 
+void drawLifes() {
   fill(255, 0, 0);
   float startX = 30;
   float startY = height;
@@ -108,7 +145,9 @@ void draw() {
 
     startX += 50;
   }
-  
+}
+
+void calculateDistancesToCircles() {
   for (int i = 0; i < circleX.length; i++) {
     if (circles[i] == true) {
       float distance = sqrt((pacmanX - circleX[i]) * (pacmanX - circleX[i]) + (pacmanY - circleY[i]) * (pacmanY - circleY[i]));
@@ -126,30 +165,71 @@ void draw() {
       }
     }
   }
+}
 
-  animationStep += step * direction;
+void calculateDistancesToEnemies() {
+  for (int i = 0; i < enemyCircles.length; i++) {
+    if (enemyCircles[i] == true) {
+      float ac = pacmanY - enemyCircleY[i];  
+      float bc = pacmanX - enemyCircleX[i];
+
+      float distance = sqrt(ac * ac +bc * bc);
+
+      if (distance <= (pacmanWidth + circleSize) / 2) {
+        lifes--;
+        enemyCircles[i] = false;
+      }
+    }
+  }
+}
+
+void calculateEnemyAppearing() {
+  enemyAppearTime--; 
+  if (enemyAppearTime == 0) {
+    int i = 0; 
+    while (i < enemyCircles.length && enemyCircles[i] == true) {
+      i++;
+    }
+
+    if (i < enemyCircles.length) {
+      enemyCircleX[i] = random(20, width - 20);
+      enemyCircleY[i] = random(20, height - 70);
+      enemyCircles[i] = true;
+    }
+
+    if (i < enemyCircles.length) {
+      enemyCircles[i] = true;
+    }
+    enemyAppearTime = 400;
+  }
+}
+
+void calculateAnimation() {
+  animationStep += step * direction; 
   if (animationStep <= 0 || animationStep >= 30) {
     direction *= -1;
   }
 }
 
+
+
 void keyPressed() {
   if (key == CODED) {
     switch  (keyCode) {
-    case UP: 
-      clearPress();
+    case UP : 
+      clearPress(); 
       moveUp = true; 
-      break;
-    case DOWN: 
-      clearPress();
+      break; 
+    case DOWN : 
+      clearPress(); 
       moveDown = true; 
-      break;
-    case LEFT:
-      clearPress();
+      break; 
+    case LEFT : 
+      clearPress(); 
       moveLeft = true; 
-      break;
-    case RIGHT: 
-      clearPress();
+      break; 
+    case RIGHT : 
+      clearPress(); 
       moveRight = true; 
       break;
     }
@@ -157,25 +237,25 @@ void keyPressed() {
 }
 
 void clearPress() {
-  moveLeft = false;
-  moveRight = false;
-  moveUp = false;
+  moveLeft = false; 
+  moveRight = false; 
+  moveUp = false; 
   moveDown = false;
 }
 
 void keyReleased() {
   if (key == CODED) {
     switch  (keyCode) {
-    case UP: 
+    case UP : 
       moveUp = false; 
-      break;
-    case DOWN: 
+      break; 
+    case DOWN : 
       moveDown = false; 
-      break;
-    case LEFT: 
+      break; 
+    case LEFT : 
       moveLeft = false; 
-      break;
-    case RIGHT: 
+      break; 
+    case RIGHT : 
       moveRight = false; 
       break;
     }

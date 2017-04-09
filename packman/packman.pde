@@ -4,10 +4,7 @@ int points = 0;
 int lifes = 3;
 boolean gameOver = false;
 
-float restartButtonWidth;
-float restartButtonHeight;
-float restartButtonX;
-float restartButtonY;
+Button restartButton;
 
 float startAngle = 30;
 float endAngle = 330;
@@ -39,16 +36,11 @@ boolean moveLeft = false;
 boolean moveRight = false;
 
 float circleBoardSize = 50.0;
-float circleSize = 30.0;
-float circleX[];
-float circleY[];
-boolean circles[];
+Circle circles[];
+Color circleColor = new Color(255, 0, 0);
 
-int circlesTime[];
-float enemyCircleX[];
-float enemyCircleY[];
-boolean enemyCircles[];
-int enemyCirclesTime[];
+Circle enemyCircles[];
+Color enemyColor = new Color(39, 3, 255);
 int enemyAppearTime = 400;
 
 void setup() {
@@ -56,37 +48,26 @@ void setup() {
   smooth();
   strokeWeight(0);
   
-  gameOverFont = createFont("28 Days Later.ttf", 40, true);
-  
-  restartButtonWidth = 200;
-  restartButtonHeight = 70;
-  restartButtonX = width / 2 - restartButtonWidth / 2;
-  restartButtonY = 3 * height / 4 - restartButtonHeight / 2;
+  gameOverFont = createFont("28 Days Later.ttf", 40, true);  
+  restartButton = new Button(width / 2 - 100, 3 * height / 4 - 35, 200, 70, gameOverFont, "Restart");
 
   int count = (int)(width/ circleBoardSize);
-  circleX = new float[count];
-  circleY = new float[count];
-  circles = new boolean[count];
-  circlesTime = new int[count];
+  circles = new Circle[count];
 
   float margin = (width - count * circleBoardSize) / 2;
-  for (int i = 0; i < circleX.length; i++) {
-    circleX[i] = margin + i * circleBoardSize + circleBoardSize / 2.0;
-    circleY[i] = random(20, height - 70);
-    circles[i] = true;
+  for (int i = 0; i < circles.length; i++) {
+    float x = margin + i * circleBoardSize + circleBoardSize / 2.0;
+    float y = random(20, height - 70);
+    circles[i] = new Circle(x, y, true, 0);
   }
 
   int enemyCount = (int)(count / 5);
-  enemyCircleX = new float[enemyCount];
-  enemyCircleY = new float[enemyCount];
-  enemyCircles = new boolean[enemyCount];
-  enemyCirclesTime = new int[enemyCount];
+  enemyCircles = new Circle[enemyCount];
 
-  for (int i = 0; i < enemyCircleX.length; i++) {
-    enemyCircleX[i] = random(20, width - 20);
-    enemyCircleY[i] = random(20, height - 20);
-    enemyCircles[i] = false;
-    enemyCirclesTime[i] = 0;
+  for (int i = 0; i < enemyCircles.length; i++) {
+    float x = random(20, width - 20);
+    float y = random(20, height - 20);
+    enemyCircles[i] = new Circle(x, y, false, 0);
   }
 }
 
@@ -96,7 +77,9 @@ void draw() {
     drawGame();
   } else {
     drawGameOver();
-    checkRestart();
+    if (restartButton.needsRestart()) {
+      restart();
+    }
   }
 }
 
@@ -112,7 +95,7 @@ void prepareGame() {
 
 void drawGameOver() {
   drawGameOverMessage();
-  drawRestartButton();
+  restartButton.drawButton();
 }
 
 void drawGameOverMessage() {
@@ -121,23 +104,6 @@ void drawGameOverMessage() {
   textFont(gameOverFont, 40);
   textAlign(CENTER, CENTER);
   text("Game Over\n Points " + points, width / 2, height / 2);
-}
-
-void drawRestartButton() {  
-  fill(255, 0, 0);
-  textFont(gameOverFont, 40);
-  textAlign(CENTER, CENTER);
-  text("Restart", width / 2, 3 * height / 4);
-}
-
-void checkRestart() {
-  if (mousePressed == true) {
-    if (mouseX >= restartButtonX && mouseX <= restartButtonX + restartButtonWidth) {
-      if (mouseY >= restartButtonY && mouseY <= restartButtonY + restartButtonHeight) {
-        restart();        
-      }
-    }
-  }
 }
 
 void restart() {
@@ -183,19 +149,17 @@ void bounceOnEdges() {
 }
 
 void drawCircles() {
-  fill(250, 5, 9);
-  for (int i = 0; i < circleX.length; i++) {
-    if (circles[i] == true) {
-      ellipse(circleX[i], circleY[i], circleSize, circleSize);
+  for (int i = 0; i < circles.length; i++) {
+    if (circles[i].isVisible) {
+      circles[i].drawWithColor(circleColor);
     }
   }
 }
 
 void drawEnemyCircles() {
-  fill(39, 3, 255);
   for (int i = 0; i < enemyCircles.length; i++) {
-    if (enemyCircles[i] == true) {
-      ellipse(enemyCircleX[i], enemyCircleY[i], circleSize, circleSize);
+    if (enemyCircles[i].isVisible) {
+      enemyCircles[i].drawWithColor(enemyColor);
     }
   }
 }
@@ -226,20 +190,20 @@ void drawLifes() {
 }
 
 void calculateDistancesToCircles() {
-  for (int i = 0; i < circleX.length; i++) {
-    if (circles[i] == true) {
-      float distance = sqrt((pacmanX - circleX[i]) * (pacmanX - circleX[i]) + (pacmanY - circleY[i]) * (pacmanY - circleY[i]));
-      if (distance < (pacmanWidth + circleSize) / 2) {
+  for (int i = 0; i < circles.length; i++) {
+    if (circles[i].isVisible) {
+      float distance = sqrt((pacmanX - circles[i].x) * (pacmanX - circles[i].x) + (pacmanY - circles[i].y) * (pacmanY - circles[i].y));
+      if (distance < (pacmanWidth + circles[i].size) / 2) {
         points += random(5, 10);
-        circles[i] = false;
-        circlesTime[i] = 200;
+        circles[i].hide();
+        circles[i].time = 200;
       }
     } else {
-      circlesTime[i]--;
-      if (circlesTime[i] == 0) {
-        circles[i] = true;
-        circleX[i] = random(20, width - 20);
-        circleY[i] = random(20, height - 70);
+      circles[i].time--;
+      if (circles[i].time == 0) {
+        circles[i].show();
+        circles[i].x = random(20, width - 20);
+        circles[i].y = random(20, height - 70);
       }
     }
   }
@@ -247,15 +211,15 @@ void calculateDistancesToCircles() {
 
 void calculateDistancesToEnemies() {
   for (int i = 0; i < enemyCircles.length; i++) {
-    if (enemyCircles[i] == true) {
-      float ac = pacmanY - enemyCircleY[i];  
-      float bc = pacmanX - enemyCircleX[i];
+    if (enemyCircles[i].isVisible) {
+      float ac = pacmanY - enemyCircles[i].y;  
+      float bc = pacmanX - enemyCircles[i].x;
 
       float distance = sqrt(ac * ac +bc * bc);
 
-      if (distance <= (pacmanWidth + circleSize) / 2) {
+      if (distance <= (pacmanWidth + enemyCircles[i].size) / 2) {
         lifes--;
-        enemyCircles[i] = false;
+        enemyCircles[i].hide();
         
         if (lifes == 0) {
           gameOver = true;
@@ -269,14 +233,14 @@ void calculateEnemyAppearing() {
   enemyAppearTime--; 
   if (enemyAppearTime == 0) {
     int i = 0; 
-    while (i < enemyCircles.length && enemyCircles[i] == true) {
+    while (i < enemyCircles.length && enemyCircles[i].isVisible) {
       i++;
     }
 
     if (i < enemyCircles.length) {
-      enemyCircleX[i] = random(20, width - 20);
-      enemyCircleY[i] = random(20, height - 70);
-      enemyCircles[i] = true;
+      enemyCircles[i].x = random(20, width - 20);
+      enemyCircles[i].y = random(20, height - 70);
+      enemyCircles[i].show();
     }
 
     enemyAppearTime = 400;

@@ -2,30 +2,23 @@ PFont gameOverFont;
 
 int points = 0;
 int lifes = 3;
+
+boolean mainMenu = true;
 boolean gameOver = false;
 
+Button playButton;
 Button restartButton;
-
-float startAngle = 30;
-float endAngle = 330;
-float animationStep = 0;
 
 float startAngleRight = 30;
 float endAngleRight = 330;
-
 float startAngleLeft = 210;
 float endAngleLeft = 510;
-
 float startAngleDown = 120;
 float endAngleDown = 420;
-
 float startAngleUp = 300;
 float endAngleUp = 600;
 
-float pacmanX = 250;
-float pacmanY = 250;
-float pacmanWidth = 100;
-float pacmanHeigth = 100;
+Pacman pacman;
 
 float step = 2.0;
 int direction = 1;
@@ -48,8 +41,11 @@ void setup() {
   smooth();
   strokeWeight(0);
   
+  pacman = new Pacman(250, 250, new Color(255, 255, 0));
+  
   gameOverFont = createFont("28 Days Later.ttf", 40, true);  
   restartButton = new Button(width / 2 - 100, 3 * height / 4 - 35, 200, 70, gameOverFont, "Restart");
+  playButton = new Button(width / 2 - 100, 3 * height / 4 - 35, 200, 70, gameOverFont, "Play");
 
   int count = (int)(width/ circleBoardSize);
   circles = new Circle[count];
@@ -72,7 +68,12 @@ void setup() {
 }
 
 void draw() {
-  if (gameOver == false) {
+  if (mainMenu == true) {
+    drawMainMenu();
+    if (playButton.needsRestart()) {
+      mainMenu = false;
+    }
+  } else if (gameOver == false) {
     prepareGame();
     drawGame();
   } else {
@@ -81,6 +82,19 @@ void draw() {
       restart();
     }
   }
+}
+
+void drawMainMenu() {
+  drawPacmanMessage();
+  playButton.drawButton();
+}
+
+void drawPacmanMessage() {
+  background(0);
+  fill(255, 0, 0);
+  textFont(gameOverFont, 40);
+  textAlign(CENTER, CENTER);
+  text("Pacman", width / 2, height / 2);
 }
 
 void prepareGame() {
@@ -116,36 +130,36 @@ void drawGame() {
   background(255);
   drawCircles();
   drawEnemyCircles();
-  drawPacman();
+  pacman.drawPacman();
   drawPoints();  
   drawLifes();
 }
 
 void selectAngles() {
   if (moveUp == true) {
-    startAngle = startAngleUp - animationStep;
-    endAngle = endAngleUp + animationStep;
-    pacmanY -= 5;
+    pacman.startAngle = startAngleUp - pacman.shift;
+    pacman.endAngle = endAngleUp + pacman.shift;
+    pacman.y -= 5;
   } else if (moveDown == true) {
-    startAngle = startAngleDown - animationStep;
-    endAngle = endAngleDown + animationStep;
-    pacmanY += 5;
+    pacman.startAngle = startAngleDown - pacman.shift;
+    pacman.endAngle = endAngleDown + pacman.shift;
+    pacman.y += 5;
   } else if (moveLeft == true) {
-    startAngle = startAngleLeft - animationStep;
-    endAngle = endAngleLeft + animationStep;
-    pacmanX -= 5;
+    pacman.startAngle = startAngleLeft - pacman.shift;
+    pacman.endAngle = endAngleLeft + pacman.shift;
+    pacman.x -= 5;
   } else if (moveRight == true) {
-    startAngle = startAngleRight - animationStep;
-    endAngle = endAngleRight + animationStep;
-    pacmanX += 5;
+    pacman.startAngle = startAngleRight - pacman.shift;
+    pacman.endAngle = endAngleRight + pacman.shift;
+    pacman.x += 5;
   }
 }
 
 void bounceOnEdges() {
-  if (pacmanX - pacmanWidth / 2 <= 0) pacmanX = pacmanWidth / 2;
-  if (pacmanY - pacmanHeigth / 2 <= 20) pacmanY = pacmanHeigth / 2 + 20;
-  if (pacmanX + pacmanWidth / 2 >= width) pacmanX = width - pacmanWidth / 2;
-  if (pacmanY + pacmanHeigth / 2 >= height - 50) pacmanY = height - 50 - pacmanHeigth / 2;
+  if (pacman.x - pacman.size / 2 <= 0) pacman.x = pacman.size / 2;
+  if (pacman.y - pacman.size / 2 <= 20) pacman.y = pacman.size / 2 + 20;
+  if (pacman.x + pacman.size / 2 >= width) pacman.x = width - pacman.size / 2;
+  if (pacman.y + pacman.size / 2 >= height - 50) pacman.y = height - 50 - pacman.size / 2;
 }
 
 void drawCircles() {
@@ -162,11 +176,6 @@ void drawEnemyCircles() {
       enemyCircles[i].drawWithColor(enemyColor);
     }
   }
-}
-
-void drawPacman() {
-  fill(250, 201, 5);
-  arc(pacmanX, pacmanY, pacmanWidth, pacmanHeigth, radians(startAngle), radians(endAngle));
 }
 
 void drawPoints() {
@@ -192,8 +201,8 @@ void drawLifes() {
 void calculateDistancesToCircles() {
   for (int i = 0; i < circles.length; i++) {
     if (circles[i].isVisible) {
-      float distance = sqrt((pacmanX - circles[i].x) * (pacmanX - circles[i].x) + (pacmanY - circles[i].y) * (pacmanY - circles[i].y));
-      if (distance < (pacmanWidth + circles[i].size) / 2) {
+      float distance = sqrt((pacman.x - circles[i].x) * (pacman.x - circles[i].x) + (pacman.y - circles[i].y) * (pacman.y - circles[i].y));
+      if (distance < (pacman.size + circles[i].size) / 2) {
         points += random(5, 10);
         circles[i].hide();
         circles[i].time = 200;
@@ -212,12 +221,12 @@ void calculateDistancesToCircles() {
 void calculateDistancesToEnemies() {
   for (int i = 0; i < enemyCircles.length; i++) {
     if (enemyCircles[i].isVisible) {
-      float ac = pacmanY - enemyCircles[i].y;  
-      float bc = pacmanX - enemyCircles[i].x;
+      float ac = pacman.y - enemyCircles[i].y;  
+      float bc = pacman.x - enemyCircles[i].x;
 
       float distance = sqrt(ac * ac +bc * bc);
 
-      if (distance <= (pacmanWidth + enemyCircles[i].size) / 2) {
+      if (distance <= (pacman.size + enemyCircles[i].size) / 2) {
         lifes--;
         enemyCircles[i].hide();
         
@@ -248,13 +257,11 @@ void calculateEnemyAppearing() {
 }
 
 void calculateAnimation() {
-  animationStep += step * direction; 
-  if (animationStep <= 0 || animationStep >= 30) {
+  pacman.shift += step * direction; 
+  if (pacman.shift <= 0 || pacman.shift >= 30) {
     direction *= -1;
   }
 }
-
-
 
 void keyPressed() {
   if (key == CODED) {

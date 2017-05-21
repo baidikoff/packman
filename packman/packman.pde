@@ -34,7 +34,10 @@ Color circleColor = new Color(255, 0, 0);
 
 Circle enemyCircles[];
 Color enemyColor = new Color(39, 3, 255);
+
 int enemyAppearTime = 400;
+int maxEnemyAppearTime = 400;
+int enemyCount = 0;
 
 void setup() {
   size(800, 600);
@@ -57,7 +60,7 @@ void setup() {
     circles[i] = new Circle(x, y, true, 0);
   }
 
-  int enemyCount = (int)(count / 5);
+  int enemyCount = (int)(count / 3);
   enemyCircles = new Circle[enemyCount];
 
   for (int i = 0; i < enemyCircles.length; i++) {
@@ -124,6 +127,18 @@ void restart() {
   lifes = 3;
   points = 0;
   gameOver = false;
+  
+  enemyAppearTime = maxEnemyAppearTime;
+  enemyCount = 0;
+  for (int i = 0; i < enemyCircles.length; i++) {
+    enemyCircles[i].hide();
+  }
+  
+  for (int i = 0; i < circles.length; i++) {
+    circles[i].x = random(20, width - 20);
+    circles[i].y = random(20, height - 30);
+    circles[i].show();
+  }
 }
 
 void drawGame() {
@@ -233,6 +248,18 @@ void calculateDistancesToEnemies() {
         if (lifes == 0) {
           gameOver = true;
         }
+      } else {
+        if (pacman.x > enemyCircles[i].x) {
+          enemyCircles[i].x++;
+        } else if (pacman.x < enemyCircles[i].x) {
+          enemyCircles[i].x--;
+        }
+        
+        if (pacman.y > enemyCircles[i].y) {
+          enemyCircles[i].y++;
+        } else if (pacman.y < enemyCircles[i].y) {
+          enemyCircles[i].y--;
+        }
       }
     }
   }
@@ -250,9 +277,14 @@ void calculateEnemyAppearing() {
       enemyCircles[i].x = random(20, width - 20);
       enemyCircles[i].y = random(20, height - 70);
       enemyCircles[i].show();
+      
+      enemyCount++;
     }
 
-    enemyAppearTime = 400;
+    enemyAppearTime = maxEnemyAppearTime - (enemyCount / 2 * 100);
+    if (enemyAppearTime < 100) {
+      enemyAppearTime = 100;
+    }
   }
 }
 
